@@ -13,6 +13,8 @@
   <arg name="max_payload" />
   <arg name="prefix" default="" />
   <arg name="servoj_time" default="0.008" />
+  <arg name="servoj_gain" default="100." />
+  <arg name="servoj_lookahead_time" default="1." />
   <arg name="base_frame" default="$(arg prefix)base" />
   <arg name="tool_frame" default="$(arg prefix)tool0_controller" />
 
@@ -33,6 +35,8 @@
     <param name="max_payload" type="double" value="$(arg max_payload)" />
     <param name="max_velocity" type="double" value="$(arg max_velocity)" />
     <param name="servoj_time" type="double" value="$(arg servoj_time)" />
+    <param name="servoj_gain" type="double" value="$(arg servoj_gain)" />
+    <param name="servoj_lookahead_time" type="double" value="$(arg servoj_lookahead_time)" />
     <param name="base_frame" type="str" value="$(arg base_frame)"/>
     <param name="tool_frame" type="str" value="$(arg tool_frame)"/>
     <param name="require_activation" type="str" value="$(arg require_activation)" />
