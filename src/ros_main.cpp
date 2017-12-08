@@ -13,6 +13,7 @@
 #include "ur_modern_driver/ros/rt_publisher.h"
 #include "ur_modern_driver/ros/service_stopper.h"
 #include "ur_modern_driver/ros/trajectory_follower.h"
+#include "ur_modern_driver/ros/urscript_handler.h"
 #include "ur_modern_driver/ur/commander.h"
 #include "ur_modern_driver/ur/factory.h"
 #include "ur_modern_driver/ur/messages.h"
@@ -106,6 +107,7 @@ int main(int argc, char **argv)
 
   ROSController *controller(nullptr);
   ActionServer *action_server(nullptr);
+  URScriptHandler *urscript_handler(nullptr);
   if (args.use_ros_control)
   {
     LOG_INFO("ROS control enabled");
@@ -120,6 +122,9 @@ int main(int argc, char **argv)
     rt_vec.push_back(action_server);
     services.push_back(action_server);
   }
+
+  urscript_handler = new URScriptHandler(*rt_commander);
+  services.push_back(urscript_handler);
 
   MultiConsumer<RTPacket> rt_cons(rt_vec);
   Pipeline<RTPacket> rt_pl(rt_prod, rt_cons);

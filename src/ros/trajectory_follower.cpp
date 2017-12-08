@@ -16,14 +16,14 @@ def driverProg():
 	SERVO_RUNNING = 1
 	cmd_servo_state = SERVO_IDLE
 	cmd_servo_q = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-	
+
 	def set_servo_setpoint(q):
 		enter_critical
 		cmd_servo_state = SERVO_RUNNING
 		cmd_servo_q = q
 		exit_critical
 	end
-	
+
 	thread servoThread():
 		state = SERVO_IDLE
 		while True:
