@@ -193,34 +193,44 @@ def driveRobotLowBandwidthTrajectory():
             l_sent_waypoints_number = l_sent_waypoints_number + 1
         end
         join controlling_thread
+        send_message(-1)
     end
 
     thread receivingThread():
         local sending_thread = run sendingThread()
-        while True:
-            waypoint_received = socket_read_ascii_float(14, CONNECTION_NAME)
-            if waypoint_received[0] == 0:
-                textmsg("Not received trajectory for the last 2 seconds. Quitting")
-                enter_critical
-                g_stopping = True
-                exit_critical
-                break
-            elif waypoint_received[0] != JOINT_NUM * 2 + 2:
-                textmsg("Received wrong number of floats in trajectory. This is certainly not OK.")
-                textmsg(waypoint_received[0])
-                enter_critical
-                g_stopping = True
-                exit_critical
-                break
-            elif is_waypoint_sentinel(waypoint_received):
-                add_next_waypoint(waypoint_received)
-                enter_critical
-                g_stopping = True
-                g_received_waypoints_number = g_received_waypoints_number + 1
-                exit_critical
-                break
+        local l_stopping = False
+        local l_requested_waypoints_number = -1
+        local l_received_waypoints_number = -1
+        while not l_stopping:
+            enter_critical
+            l_requested_waypoints_number = g_requested_waypoints_number
+            l_received_waypoints_number = g_received_waypoints_number
+            l_stopping = g_stopping
+            exit_critical
+            if l_requested_waypoints_number > l_received_waypoints_number and not l_stopping:
+                waypoint_received = socket_read_ascii_float(14, CONNECTION_NAME)
+                if waypoint_received[0] == 0:
+                    textmsg("Not received trajectory point for the last 2 seconds. Quitting...")
+                    enter_critical
+                    g_stopping = True
+                    exit_critical
+                elif waypoint_received[0] != JOINT_NUM * 2 + 2:
+                    textmsg("Received wrong number of floats in trajectory. This is certainly not OK.")
+                    textmsg(waypoint_received[0])
+                    enter_critical
+                    g_stopping = True
+                    exit_critical
+                elif is_waypoint_sentinel(waypoint_received):
+                    add_next_waypoint(waypoint_received)
+                    enter_critical
+                    g_stopping = True
+                    g_received_waypoints_number = g_received_waypoints_number + 1
+                    exit_critical
+                else:
+                    add_next_waypoint(waypoint_received)
+                end
             end
-            add_next_waypoint(waypoint_received)
+            sync()
         end
         join sending_thread
     end
@@ -358,9 +368,14 @@ bool LowBandwidthTrajectoryFollower::execute(std::vector<TrajectoryPoint> &traje
         finished = true;
         break;
      }
-     unsigned int message_num=atoi((const char *) line);
+     int message_num = atoi((const char *) line);
+     if (message_num == -1) {
+         LOG_DEBUG("Received success message");
+         res = true;
+         break;
+     }
      LOG_DEBUG("Received request %i", message_num);
-     if (message_num < trajectory.size())
+     if (message_num < static_cast<int>(trajectory.size()))
      {
         res = execute(trajectory[message_num].positions, trajectory[message_num].velocities,
                 message_num, trajectory[message_num].time_from_start.count() / 1e6);
